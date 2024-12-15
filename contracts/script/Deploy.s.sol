@@ -1,7 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "../src/Counter.sol";
+import "../src/token/USDB.sol";
+import "../src/gnosis/ConditionalTokens.sol";
+import "../src/ChallengeManager.sol";
 import "./DeployHelpers.s.sol";
 
 contract DeployScript is ScaffoldETHDeploy {
@@ -16,10 +18,30 @@ contract DeployScript is ScaffoldETHDeploy {
     }
     vm.startBroadcast(deployerPrivateKey);
 
-    Counter counter = new Counter();
+    address deployer = vm.addr(deployerPrivateKey);
+
+    USDB usdb = new USDB(deployer, deployer);
     console.logString(
       string.concat(
-        "Counter deployed at: ", vm.toString(address(counter))
+        "USDB deployed at: ", vm.toString(address(usdb))
+      )
+    );
+
+    ConditionalTokens conditionalTokens = new ConditionalTokens();
+    console.logString(
+      string.concat(
+        "ConditionalTokens deployed at: ", vm.toString(address(conditionalTokens))
+      )
+    );
+
+    ChallengeManager challengeManager = new ChallengeManager(
+      block.timestamp,
+      address(conditionalTokens),
+      address(usdb)
+    );
+    console.logString(
+      string.concat(
+        "ChallengeManager deployed at: ", vm.toString(address(challengeManager))
       )
     );
 
