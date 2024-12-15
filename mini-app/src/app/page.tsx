@@ -8,13 +8,29 @@ import { LocaleSwitcher } from '@/components/LocaleSwitcher/LocaleSwitcher';
 import { Page } from '@/components/Page';
 
 import tonSvg from './_assets/ton.svg';
+import { useContext, useEffect } from 'react';
+import { WalletContext } from '@/components/WalletContext/WalletContext';
 
 export default function Home() {
   const t = useTranslations('i18n');
+  const {address, chainId, isWalletConnected, switchChainId } = useContext(WalletContext);
+
+  useEffect(() => {
+      const bnbCHainId = '0x38';
+      // const bnbCHainId = '0x61'; // BNB testnet
+      if (isWalletConnected && chainId !== bnbCHainId) {
+          switchChainId(bnbCHainId);
+      }
+  }, [isWalletConnected, chainId]);
 
   return (
     <Page back={false}>
       <List>
+        <Section
+          header="Uxuyy"
+        >
+            <h1>address: {address}, chainId: {chainId}</h1>
+        </Section>
         <Section
           header="Features"
           footer="You can use these pages to learn more about features, provided by Telegram Mini Apps and other useful projects"

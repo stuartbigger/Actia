@@ -11,11 +11,13 @@ export const WalletContext = createContext<{
   sendTransaction?: (to: string, value: number) => Promise<void>;
   getChainId?: () => Promise<string>;
   getAccounts?: () => Promise<string>;
+  initializeWallet: () => Promise<void>;
 }>({
   address: "",
   chainId: "",
   isWalletConnected: false,
   switchChainId: async () => {},
+  initializeWallet: async () => {},
 });
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
@@ -24,40 +26,53 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [ethereum, setEthereum] = useState<EthereumProvider>();
 
-  useEffect(() => {
-    async function initializeWallet() {
-      if (isWalletConnected) {
-        return;
+  async function initializeWallet() {
+    if (isWalletConnected) {
+      return;
+    }
+    const { ethereum } = new WalletTgSdk();
+
+    if (!ethereum.isConnected()) {
+      console.log("Enablin EVM");
+      try {
+        const enabled = await ethereum.enable();
+        console.log("Is Enabled: ", enabled);
+      } catch (error) {
+        console.log(error);
       }
-      const { ethereum } = new WalletTgSdk();
-      await ethereum.enable();
-      setEthereum(ethereum);
-
-      let accounts = await ethereum.request({ method: "eth_accounts" });
-      if (!accounts[0]) {
-        await ethereum.request({ method: "eth_requestAccounts" });
-      }
-
-      const chainId = await ethereum.request({ method: "eth_chainId" });
-      accounts = await ethereum.request({ method: "eth_accounts" });
-      console.log(accounts);
-      setAddress(accounts[0]);
-      setChainId(chainId);
-
-      ethereum.removeAllListeners();
-      ethereum.on("accountsChanged", (accounts) => {
-        setAddress(accounts[0]);
-        console.log("Active account changed:", accounts[0]);
-      });
-      ethereum.on("chainChanged", (changedChainId) => {
-        setChainId(changedChainId);
-        console.log("Network changed to:", changedChainId);
-      });
-      setIsWalletConnected(true);
+    } else {
+      console.log("EVM already enabled");
     }
 
+    setEthereum(ethereum);
+
+    console.log("CONNECTED: " + ethereum.connected);
+    let accounts = await ethereum.request({ method: "eth_accounts" });
+    if (!accounts[0]) {
+      await ethereum.request({ method: "eth_requestAccounts" });
+    }
+
+    const chainId = await ethereum.request({ method: "eth_chainId" });
+    accounts = await ethereum.request({ method: "eth_accounts" });
+    console.log(accounts);
+    setAddress(accounts[0]);
+    setChainId(chainId);
+
+    ethereum.removeAllListeners();
+    ethereum.on("accountsChanged", (accounts) => {
+      setAddress(accounts[0]);
+      console.log("Active account changed:", accounts[0]);
+    });
+    ethereum.on("chainChanged", (changedChainId) => {
+      setChainId(changedChainId);
+      console.log("Network changed to:", changedChainId);
+    });
+    setIsWalletConnected(true);
+  }
+
+  useEffect(() => {
     initializeWallet();
-  }, [isWalletConnected]);
+  }, []);
 
   async function sendTransaction(to: string, value: number) {
     if (!ethereum) {
@@ -135,6 +150,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         sendTransaction,
         getChainId,
         getAccounts,
+        initializeWallet,
       }}
     >
       {children}
