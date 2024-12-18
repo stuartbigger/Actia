@@ -20,7 +20,7 @@ contract DeployScript is ScaffoldETHDeploy {
 
     address deployer = vm.addr(deployerPrivateKey);
 
-    USDB usdb = new USDB(deployer, deployer);
+    USDB usdb = new USDB(deployer);
     console.logString(
       string.concat(
         "USDB deployed at: ", vm.toString(address(usdb))
@@ -36,6 +36,7 @@ contract DeployScript is ScaffoldETHDeploy {
 
     ChallengeManager challengeManager = new ChallengeManager(
       block.timestamp,
+      deployer,
       address(conditionalTokens),
       address(usdb)
     );

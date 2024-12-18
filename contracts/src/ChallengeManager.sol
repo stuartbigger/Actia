@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IConditionalTokens } from "./interfaces/IConditionalTokens.sol";
+import { FixedProductMarketMaker } from "./gnosis/FixedProductMarketMaker.sol";
 
 contract ChallengeManager {
 
@@ -10,14 +11,17 @@ contract ChallengeManager {
     uint256 public constant CHALLENGE_DURATION = 1 weeks;
 
     struct Track {
-        string name;
+        uint256 id;
+        string trackName;
         string artist;
         string cid;
     }
 
     struct Challenge {
+        uint256 id;
         uint256 startingTime;
         uint256 endingTime;
+        uint256 winnerTrackId;
         bytes32 gameId;
         bytes32 conditionId;
         uint256[] positionIds;
@@ -31,23 +35,57 @@ contract ChallengeManager {
     uint256 _nextChallengeId;
 
     uint256 public immutable arenaStartTime;
+    address public oracle;
     IERC20 public token;
     IConditionalTokens public conditionalTokens;
 
     mapping (uint256 => Track) tracks;
     mapping (uint256 => Challenge) challenges;
 
+    event JoinedChallenge(
+        uint256 challengeId, 
+        uint256 trackId,
+        address player
+    );
+
+    event WinnerSelected(
+        uint256 challengeId,
+        uint256 trackId
+    );
+
+    modifier onlyOracle() {
+        require(msg.sender == oracle, "Only oracle");
+        _;
+    }
+
+    modifier gameExists(uint256 _challengeId) {
+        require(_challengeId < _nextChallengeId, "Game does not exist");
+        _;
+    }
+
+    modifier gameEnded(uint256 _challengeId) {
+        require(challenges[_challengeId].endingTime < block.timestamp, "Game has not ended");
+        _;
+    }
+
     constructor(
         uint256 _arenaStartTime,
+        address _oracle,
         address _conditionalTokens,
         address _token
     ) {
         arenaStartTime = _arenaStartTime;
+        oracle = _oracle;
         token = IERC20(_token);
         conditionalTokens = IConditionalTokens(_conditionalTokens);
     }
 
-    function joinChallenge(Track calldata track) public {
+    function joinChallenge(
+        string calldata trackName,
+        string calldata artist,
+        string calldata cid
+    ) public {
+        Track memory track = Track(_nextTrackId, trackName, artist, cid);
         Challenge storage challenge = challenges[_nextChallengeId];
         tracks[_nextTrackId] = track;
         _nextTrackId++;
@@ -56,18 +94,27 @@ contract ChallengeManager {
         challenge.tracks.push(track);
 
         if (challenge.players.length != MAX_CHALLENGERS) {
+            challenge.id = _nextChallengeId;
             challenge.gameId = bytes32(_nextChallengeId);            
             challenge.startingTime = arenaStartTime + (_nextChallengeId * CHALLENGE_DURATION);
             challenge.endingTime = challenge.startingTime + CHALLENGE_DURATION;
 
             uint256 numberOfOutcomes = MAX_CHALLENGERS;
-            challenge.conditionId = conditionalTokens.getConditionId(address(this), challenge.gameId, numberOfOutcomes);
+            challenge.conditionId = conditionalTokens.getConditionId(
+                address(this), 
+                challenge.gameId, 
+                numberOfOutcomes
+            );
             conditionalTokens.prepareCondition(address(this), challenge.gameId, numberOfOutcomes);
 
             for (uint8 i = 0; i < numberOfOutcomes; i++) {
                 uint256 indexSet = 1 << i;
 
-                bytes32 collectionId = conditionalTokens.getCollectionId(bytes32(0), challenge.conditionId, indexSet);
+                bytes32 collectionId = conditionalTokens.getCollectionId(
+                    bytes32(0), 
+                    challenge.conditionId, 
+                    indexSet
+                );
                 challenge.collectionIds.push(collectionId);
 
                 uint256 positionId = conditionalTokens.getPositionId(token, collectionId);
@@ -78,6 +125,19 @@ contract ChallengeManager {
         } else {
             _nextChallengeId++;
         }
+
+        emit JoinedChallenge(_nextChallengeId, _nextTrackId, msg.sender);
+    }
+
+    function selectWinner(uint256 challengeId, uint256 trackId) 
+        public 
+        onlyOracle 
+        gameExists(challengeId) 
+        gameEnded(challengeId) 
+    {
+        Challenge storage challenge = challenges[challengeId];
+        challenge.winnerTrackId = trackId;
+        emit WinnerSelected(challengeId, trackId);
     }
 
     function numberOfChallenges() public view returns (uint256) {
@@ -92,11 +152,16 @@ contract ChallengeManager {
         return challenges[currentChallengeId()];
     }
 
-    function getChallenge(uint256 _challengeId) public view returns (Challenge memory) {
-        return challenges[_challengeId];
+    function getChallenge(uint256 challengeId) public view returns (Challenge memory) {
+        return challenges[challengeId];
     }
 
-    function getTrack(uint256 _trackId) public view returns (Track memory) {
-        return tracks[_trackId];
+    function getTrack(uint256 trackId) public view returns (Track memory) {
+        return tracks[trackId];
+    }
+
+    function getWinner(uint256 challengeId) public view returns (Track memory) {
+        uint256 winnerTrackId = challenges[challengeId].winnerTrackId;
+        return tracks[winnerTrackId];
     }
 }

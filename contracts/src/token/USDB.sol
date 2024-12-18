@@ -7,18 +7,16 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 
 contract USDB is ERC20, AccessControl, ERC20Permit {
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    constructor(address defaultAdmin, address minter)
+    constructor(address defaultAdmin)
         ERC20("USDB", "USDB")
         ERC20Permit("USDB")
     {
         _mint(msg.sender, 1000000 * 10 ** decimals());
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
-        _grantRole(MINTER_ROLE, minter);
     }
 
-    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
+    function mint(address to, uint256 amount) public {
         _mint(to, amount);
     }
 }
