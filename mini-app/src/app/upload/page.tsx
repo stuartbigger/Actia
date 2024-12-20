@@ -5,7 +5,7 @@ import { Upload, Send, Music } from "lucide-react";
 
 export default function UploadPage() {
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [author, setAuthor] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -16,15 +16,15 @@ export default function UploadPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submitted:", { title, description, file });
+    console.log("Submitted:", { title, author, file });
     setTitle("");
-    setDescription("");
+    setAuthor("");
     setFile(null);
   };
 
   return (
     <div className="min-h-screen bg-[#121212] text-white font-sans flex flex-col">
-      <header className=" p-6 border-[#282828]">
+      <header className="p-6 border-[#282828]">
         <h1 className="text-4xl font-bold text-[#1DB954] flex items-center">
           <Music className="w-8 h-8 mr-2" />
           Upload Track
@@ -56,23 +56,23 @@ export default function UploadPage() {
 
           <div className="space-y-2">
             <label
-              htmlFor="description"
+              htmlFor="author"
               className="text-sm font-medium text-[#B3B3B3]"
             >
-              Description
+              Track Author
             </label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-3 bg-[#282828] text-white border border-[#333333] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1DB954] resize-none placeholder-[#727272]"
-              placeholder="Enter track description"
-              rows={4}
+            <input
+              type="text"
+              id="author"
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
+              className="w-full p-3 bg-[#282828] text-white border border-[#333333] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1DB954] placeholder-[#727272]"
+              placeholder="Enter author's name"
               required
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 pt-12 ">
             <label
               htmlFor="file"
               className="text-sm font-medium text-[#B3B3B3]"
