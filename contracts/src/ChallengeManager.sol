@@ -29,10 +29,11 @@ contract ChallengeManager {
         bytes32[] collectionIds;
         address[] players;
         Track[] tracks;
+        string criteria;
     }
 
-    uint256 _nextTrackId;
-    uint256 _nextChallengeId;
+    uint256 _nextTrackId = 1;
+    uint256 _nextChallengeId = 1;
 
     uint256 public immutable arenaStartTime;
     address public oracle;
@@ -84,7 +85,7 @@ contract ChallengeManager {
         string calldata trackName,
         string calldata artist,
         string calldata cid
-    ) public {
+    ) external {
         Track memory track = Track(_nextTrackId, trackName, artist, cid);
         Challenge storage challenge = challenges[_nextChallengeId];
         tracks[_nextTrackId] = track;
@@ -129,14 +130,32 @@ contract ChallengeManager {
         emit JoinedChallenge(_nextChallengeId, _nextTrackId, msg.sender);
     }
 
-    function selectWinner(uint256 challengeId, uint256 trackId) 
-        public 
+    function selectWinner(
+        uint256 challengeId, 
+        uint256 trackId,
+        string calldata criteria
+    ) 
+        external 
         onlyOracle 
         gameExists(challengeId) 
         gameEnded(challengeId) 
     {
         Challenge storage challenge = challenges[challengeId];
         challenge.winnerTrackId = trackId;
+        challenge.criteria = criteria;
+
+        uint8 winnerTrackIndex = 0;
+        for (uint8 i = 0; i < challenge.tracks.length; i++) {
+            if (challenge.tracks[i].id == trackId) {
+                winnerTrackIndex = i;
+                break;
+            }
+        }
+
+        uint256[] memory payouts = new uint256[](MAX_CHALLENGERS);
+        payouts[winnerTrackIndex] = 1;
+        conditionalTokens.reportPayouts(challenge.gameId, payouts);
+
         emit WinnerSelected(challengeId, trackId);
     }
 

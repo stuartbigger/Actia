@@ -251,10 +251,10 @@ contract FixedProductMarketMaker is ERC20, IERC1155Receiver {
 
     function onERC1155Received(
         address operator,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes calldata data
+        address,
+        uint256,
+        uint256,
+        bytes calldata
     )
         external
         returns (bytes4)
@@ -268,9 +268,9 @@ contract FixedProductMarketMaker is ERC20, IERC1155Receiver {
     function onERC1155BatchReceived(
         address operator,
         address from,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
     )
         external
         returns (bytes4)
