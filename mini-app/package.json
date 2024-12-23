@@ -16,6 +16,7 @@
     "@uxuycom/web3-tg-sdk": "^0.1.6",
     "autoprefixer": "^10.4.20",
     "eruda": "^3.0.1",
+    "lucide-react": "0.263.1",
     "next": "14.2.4",
     "next-intl": "^3.17.6",
     "normalize.css": "^8.0.1",
