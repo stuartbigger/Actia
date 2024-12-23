@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useEffect, useState } from "react";
-import { EthereumProvider, WalletTgSdk } from "@uxuycom/web3-tg-sdk";
+import { EthereumProvider } from "@uxuycom/web3-tg-sdk";
 
 export const WalletContext = createContext<{
   address: string;
@@ -20,16 +20,22 @@ export const WalletContext = createContext<{
   initializeWallet: async () => {},
 });
 
-export function WalletProvider({ children }: { children: React.ReactNode }) {
+export function WalletProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [isClient, setIsClient] = useState(false);
   const [address, setAddress] = useState("");
   const [chainId, setChainId] = useState("");
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [ethereum, setEthereum] = useState<EthereumProvider>();
 
-  async function initializeWallet() {
+  const initializeWallet = async () => {
     if (isWalletConnected) {
       return;
     }
+    const WalletTgSdk = require("@uxuycom/web3-tg-sdk").WalletTgSdk;
     const { ethereum } = new WalletTgSdk();
 
     if (!ethereum.isConnected()) {
@@ -59,22 +65,29 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     setChainId(chainId);
 
     ethereum.removeAllListeners();
-    ethereum.on("accountsChanged", (accounts) => {
+    ethereum.on("accountsChanged", (accounts: any[]) => {
       setAddress(accounts[0]);
       console.log("Active account changed:", accounts[0]);
     });
-    ethereum.on("chainChanged", (changedChainId) => {
+    ethereum.on("chainChanged", (changedChainId: any) => {
       setChainId(changedChainId);
       console.log("Network changed to:", changedChainId);
     });
     setIsWalletConnected(true);
-  }
+  };
 
   useEffect(() => {
-    initializeWallet();
+    setIsClient(true);
+    if (typeof window !== "undefined") {
+      try {
+        initializeWallet();
+      } catch (error) {
+        console.log(error);
+      }
+    }
   }, []);
 
-  async function sendTransaction(to: string, value: number) {
+  const sendTransaction = async (to: string, value: number) => {
     if (!ethereum) {
       return;
     }
@@ -94,9 +107,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     });
 
     return receipt;
-  }
+  };
 
-  async function getChainId(): Promise<string> {
+  const getChainId = async (): Promise<string> => {
     if (!ethereum) {
       return "";
     }
@@ -109,9 +122,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       console.error("Failed to get chain ID:", error);
     }
     return "";
-  }
+  };
 
-  async function getAccounts(): Promise<string> {
+  const getAccounts = async (): Promise<string> => {
     if (!ethereum) {
       return "";
     }
@@ -123,9 +136,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       console.error("Failed to get address:", error);
     }
     return "";
-  }
+  };
 
-  async function switchChainId(chainId: string): Promise<void> {
+  const switchChainId = async (chainId: string): Promise<void> => {
     if (!ethereum) {
       return;
     }
@@ -138,6 +151,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     } catch (switchError) {
       console.error("Failed to switch chain:", switchError);
     }
+  };
+
+  if (!isClient) {
+    return null;
   }
 
   return (
@@ -157,3 +174,5 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     </WalletContext.Provider>
   );
 }
+
+export const dynamic = "client";
