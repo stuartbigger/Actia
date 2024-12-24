@@ -1,6 +1,8 @@
 {
   "i18n": {
     "header": "Application supports i18n",
-    "footer": "You can select a different language from the dropdown menu."
+    "footer": "You can select a different language from the dropdown menu.",
+    "description": "Experience epic showdowns between your favorite tracks and artists.",
+    "title": "ACTIA"
   }
 }

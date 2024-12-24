@@ -17,7 +17,7 @@ export const LocaleSwitcher: FC = () => {
   };
 
   return (
-    <Select value={locale} onChange={({ target }) => onChange(target.value)}>
+    <Select className="bg-[#121212]" value={locale} onChange={({ target }) => onChange(target.value)}>
       {localesMap.map((locale) => (
         <option key={locale.key} value={locale.key}>{locale.title}</option>
       ))}
