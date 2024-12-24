@@ -1,14 +1,14 @@
 "use client";
 
-import { Section, Cell, Image, List } from "@telegram-apps/telegram-ui";
+import { Section } from "@telegram-apps/telegram-ui";
 import { useTranslations } from "next-intl";
 
-import { Link } from "@/components/Link/Link";
-import { LocaleSwitcher } from "@/components/LocaleSwitcher/LocaleSwitcher";
+// import { LocaleSwitcher } from "@/components/LocaleSwitcher/LocaleSwitcher";
 
 import { useContext, useEffect } from "react";
 import { WalletContext } from "@/components/WalletContext/WalletContext";
 import { Trophy } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface Challenge {
   id: number;
@@ -21,6 +21,7 @@ interface Challenge {
 }
 
 const ongoingChallenge = {
+  id: 1,
   week: "Week 12",
   track1: {
     title: "Hotel California",
@@ -57,6 +58,12 @@ const completedChallenges: Challenge[] = [
 
 export default function Home() {
   const t = useTranslations("i18n");
+  const router = useRouter();
+
+  const handleRedirect = (id: number) => {
+    router.push(`/application?id=${id}`);
+  };
+
   const { address, chainId, isWalletConnected, switchChainId } =
     useContext(WalletContext);
 
@@ -85,11 +92,14 @@ export default function Home() {
       </div>
 
       <div className="flex-1 p-6 space-y-6">
-        <div className="bg-[#282828] p-6 rounded-lg shadow-md">
+        <div
+          onClick={() => handleRedirect(ongoingChallenge.id)}
+          className="cursor-pointer hover:bg-[#3E3E3E] bg-[#282828] p-6 rounded-lg shadow-md"
+        >
           <h2 className="text-2xl font-semibold text-[#1DB954]">
             Ongoing Challenge: {ongoingChallenge.week}
           </h2>
-          <div className="flex justify-between items-center mt-4">
+          <div className="flex justify-between items-center mt-4 ">
             <div className="text-center">
               <p className="font-semibold text-lg">
                 {ongoingChallenge.track1.title}
