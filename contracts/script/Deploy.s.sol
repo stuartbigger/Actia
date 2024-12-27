@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "../src/token/USDB.sol";
 import "../src/gnosis/ConditionalTokens.sol";
+import "../src/gnosis/FixedProductMarketMakerFactory.sol";
 import "../src/ChallengeManager.sol";
 import "./DeployHelpers.s.sol";
 
@@ -34,11 +35,19 @@ contract DeployScript is ScaffoldETHDeploy {
       )
     );
 
+    FixedProductMarketMakerFactory fixedProductMarketMakerFactory = new FixedProductMarketMakerFactory();
+    console.logString(
+      string.concat(
+        "FixedProductMarketMakerFactory deployed at: ", vm.toString(address(fixedProductMarketMakerFactory))
+      )
+    );
+
     ChallengeManager challengeManager = new ChallengeManager(
       block.timestamp,
       deployer,
       address(conditionalTokens),
-      address(usdb)
+      address(usdb),
+      address(fixedProductMarketMakerFactory)
     );
     console.logString(
       string.concat(

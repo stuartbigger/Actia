@@ -3,7 +3,9 @@ pragma solidity ^0.8.20;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IConditionalTokens } from "./interfaces/IConditionalTokens.sol";
+import { ConditionalTokens } from "./gnosis/ConditionalTokens.sol";
 import { FixedProductMarketMaker } from "./gnosis/FixedProductMarketMaker.sol";
+import { IFixedProductMarketMakerFactory } from "./interfaces/IFixedProductMarketMakerFactory.sol";
 
 contract ChallengeManager {
 
@@ -22,6 +24,7 @@ contract ChallengeManager {
         uint256 startingTime;
         uint256 endingTime;
         uint256 winnerTrackId;
+        address marketMaker;
         bytes32 gameId;
         bytes32 conditionId;
         uint256[] positionIds;
@@ -33,12 +36,13 @@ contract ChallengeManager {
     }
 
     uint256 _nextTrackId = 1;
-    uint256 _nextChallengeId = 1;
+    uint256 _nextChallengeId;
 
     uint256 public immutable arenaStartTime;
     address public oracle;
-    IERC20 public token;
+    IERC20 public collateralToken;
     IConditionalTokens public conditionalTokens;
+    IFixedProductMarketMakerFactory public fixedProductMarketMakerFactory;
 
     mapping (uint256 => Track) tracks;
     mapping (uint256 => Challenge) challenges;
@@ -73,12 +77,14 @@ contract ChallengeManager {
         uint256 _arenaStartTime,
         address _oracle,
         address _conditionalTokens,
-        address _token
+        address _collateralToken,
+        address _fixedProductMarketMakerFactory
     ) {
         arenaStartTime = _arenaStartTime;
         oracle = _oracle;
-        token = IERC20(_token);
+        collateralToken = IERC20(_collateralToken);
         conditionalTokens = IConditionalTokens(_conditionalTokens);
+        fixedProductMarketMakerFactory = IFixedProductMarketMakerFactory(_fixedProductMarketMakerFactory);
     }
 
     function joinChallenge(
@@ -118,11 +124,20 @@ contract ChallengeManager {
                 );
                 challenge.collectionIds.push(collectionId);
 
-                uint256 positionId = conditionalTokens.getPositionId(token, collectionId);
+                uint256 positionId = conditionalTokens.getPositionId(collateralToken, collectionId);
                 challenge.positionIds.push(positionId);
 
                 challenge.partitions.push(indexSet);
             }
+
+            bytes32[] memory conditionIds = new bytes32[](1);
+            conditionIds[0] = challenge.conditionId;
+            challenge.marketMaker = address(fixedProductMarketMakerFactory.createFixedProductMarketMaker(
+                ConditionalTokens(address(conditionalTokens)), 
+                collateralToken, 
+                conditionIds,
+                0
+            ));
         } else {
             _nextChallengeId++;
         }

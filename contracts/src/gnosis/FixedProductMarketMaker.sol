@@ -2,9 +2,9 @@
 pragma solidity ^0.8.20;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import { ERC20 } from "./ERC20.sol";
 import { ConditionalTokens } from "./ConditionalTokens.sol";
 import { CTHelpers } from "./CTHelpers.sol";
 
@@ -60,26 +60,7 @@ contract FixedProductMarketMaker is ERC20, IERC1155Receiver {
     uint[] positionIds;
     mapping (address => uint256) withdrawnFees;
     uint internal totalWithdrawnFees;
-
-    constructor(
-        ConditionalTokens _conditionalTokens,
-        IERC20 _collateralToken,
-        bytes32[] memory _conditionIds,
-        uint _fee,
-        uint[] memory _outcomeSlotCounts,
-        bytes32[][] memory _collectionIds,
-        uint[] memory _positionIds
-    )
-        ERC20("Fixed Product Market Maker", "FPMM")
-    {
-        conditionalTokens = _conditionalTokens;
-        collateralToken = _collateralToken;
-        conditionIds = _conditionIds;
-        fee = _fee;
-        outcomeSlotCounts = _outcomeSlotCounts;
-        collectionIds = _collectionIds;
-        positionIds = _positionIds;
-    }
+    
 
     function getPoolBalances() private view returns (uint[] memory) {
         address[] memory thises = new address[](positionIds.length);
@@ -141,7 +122,7 @@ contract FixedProductMarketMaker is ERC20, IERC1155Receiver {
         }
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal {
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
         if (from != address(0)) {
             withdrawFees(from);
         }
@@ -358,54 +339,4 @@ contract FixedProductMarketMaker is ERC20, IERC1155Receiver {
 
         emit FPMMSell(msg.sender, returnAmount, feeAmount, outcomeIndex, outcomeTokensToSell);
     }
-}
-
-
-// for proxying purposes
-contract FixedProductMarketMakerData {
-    mapping (address => uint256) internal _balances;
-    mapping (address => mapping (address => uint256)) internal _allowances;
-    uint256 internal _totalSupply;
-
-
-    bytes4 internal constant _INTERFACE_ID_ERC165 = 0x01ffc9a7;
-    mapping(bytes4 => bool) internal _supportedInterfaces;
-
-
-    event FPMMFundingAdded(
-        address indexed funder,
-        uint[] amountsAdded,
-        uint sharesMinted
-    );
-    event FPMMFundingRemoved(
-        address indexed funder,
-        uint[] amountsRemoved,
-        uint collateralRemovedFromFeePool,
-        uint sharesBurnt
-    );
-    event FPMMBuy(
-        address indexed buyer,
-        uint investmentAmount,
-        uint feeAmount,
-        uint indexed outcomeIndex,
-        uint outcomeTokensBought
-    );
-    event FPMMSell(
-        address indexed seller,
-        uint returnAmount,
-        uint feeAmount,
-        uint indexed outcomeIndex,
-        uint outcomeTokensSold
-    );
-    ConditionalTokens internal conditionalTokens;
-    IERC20 internal collateralToken;
-    bytes32[] internal conditionIds;
-    uint internal fee;
-    uint internal feePoolWeight;
-
-    uint[] internal outcomeSlotCounts;
-    bytes32[][] internal collectionIds;
-    uint[] internal positionIds;
-    mapping (address => uint256) internal withdrawnFees;
-    uint internal totalWithdrawnFees;
 }

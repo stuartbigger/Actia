@@ -13,6 +13,8 @@ bscTestnet = "https://bsc-testnet-dataseed.bnbchain.org"
 opBNBTestnet = "https://opbnb-testnet-rpc.bnbchain.org/"
 greenfieldTestnet = "https://gnfd-testnet-fullnode-tendermint-us.bnbchain.org"
 
+[etherscan]
+bscTestnet = { key = "${ETHERSCAN_API_KEY}" }
 
 [fmt]
 multiline_func_header = "params_first"
