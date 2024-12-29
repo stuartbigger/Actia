@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Play, Pause, Send } from "lucide-react";
 
 const track = {
@@ -19,10 +19,27 @@ const track = {
 };
 
 export default function SpotifyStyleTelegramMusicBetting() {
-  const [selectedTrack, setSelectedTrack] = useState<"track1" | "track2" | null>(null);
+  const [selectedTrack, setSelectedTrack] = useState<
+    "track1" | "track2" | null
+  >(null);
   const [betAmount, setBetAmount] = useState<string>("0.2");
   const [messages, setMessages] = useState<string[]>([]);
-  const [playingTrack, setPlayingTrack] = useState<"track1" | "track2" | null>(null);
+  const [playingTrack, setPlayingTrack] = useState<"track1" | "track2" | null>(
+    null
+  );
+
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const togglePlay = (trackKey: "track1" | "track2") => {
+    setPlayingTrack(playingTrack === trackKey ? null : trackKey);
+    if (audioRef.current) {
+      if (audioRef.current.paused) {
+        audioRef.current.play();
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  };
 
   const handleBet = () => {
     if (selectedTrack && betAmount) {
@@ -32,10 +49,6 @@ export default function SpotifyStyleTelegramMusicBetting() {
       setSelectedTrack(null);
       setBetAmount("0.2");
     }
-  };
-
-  const togglePlay = (trackKey: "track1" | "track2") => {
-    setPlayingTrack(playingTrack === trackKey ? null : trackKey);
   };
 
   return (
@@ -49,7 +62,9 @@ export default function SpotifyStyleTelegramMusicBetting() {
           <div
             key={trackKey}
             className={`flex items-center justify-between p-4 rounded-lg transition-all duration-300 ease-in-out hover:bg-[#3E3E3E] cursor-pointer ${
-              selectedTrack === trackKey ? "bg-[#1DB954] text-black" : "bg-[#282828] text-white"
+              selectedTrack === trackKey
+                ? "bg-[#1DB954] text-black"
+                : "bg-[#282828] text-white"
             }`}
             onClick={() => setSelectedTrack(trackKey as "track1" | "track2")}
           >
@@ -60,7 +75,9 @@ export default function SpotifyStyleTelegramMusicBetting() {
                   togglePlay(trackKey as "track1" | "track2");
                 }}
                 className={`w-12 h-12 text-black rounded-full flex items-center justify-center transition-all duration-300 ${
-                  selectedTrack === trackKey ? "bg-[#1ed760]" : "bg-[#1DB954] hover:bg-[#1ed760]"
+                  selectedTrack === trackKey
+                    ? "bg-[#1ed760]"
+                    : "bg-[#1DB954] hover:bg-[#1ed760]"
                 }`}
               >
                 {playingTrack === trackKey ? (
@@ -70,8 +87,12 @@ export default function SpotifyStyleTelegramMusicBetting() {
                 )}
               </button>
               <div className="flex flex-col">
-                <p className="font-semibold text-lg">{track[trackKey as "track1" | "track2"].title}</p>
-                <p className="text-sm opacity-75">{track[trackKey as "track1" | "track2"].artist}</p>
+                <p className="font-semibold text-lg">
+                  {track[trackKey as "track1" | "track2"].title}
+                </p>
+                <p className="text-sm opacity-75">
+                  {track[trackKey as "track1" | "track2"].artist}
+                </p>
                 <p
                   className={`text-sm ${selectedTrack === trackKey ? "text-black" : "text-gray-400"}`}
                 >
@@ -94,6 +115,13 @@ export default function SpotifyStyleTelegramMusicBetting() {
             </button>
           </div>
         ))}
+        <audio ref={audioRef}>
+          <source
+            src="https://ipfs.io/ipfs/QmQ7gKRNTQVZ1RVodK2nmFfGp8jsi1nmeDNzNBM3XbphGD/adiye.mp3"
+            type="audio/mpeg"
+          />
+          Your browser does not support the audio element.
+        </audio>
       </div>
 
       <div className="flex-1 bg-[#181818] p-6 flex flex-col">

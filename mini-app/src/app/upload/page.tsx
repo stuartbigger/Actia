@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Upload, Send, Music } from "lucide-react";
+import { ThirdwebStorage } from "@thirdweb-dev/storage";
 
 export default function UploadPage() {
   const [title, setTitle] = useState("");
@@ -11,7 +12,18 @@ export default function UploadPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+      uploadData(e.target.files[0]);
     }
+  };
+  const uploadData = async (p0: File) => {
+    const storage = new ThirdwebStorage({
+      clientId: process.env.NEXT_PUBLIC_CLIENT_ID,
+      secretKey: process.env.NEXT_PUBLIC_SECRET_KEY,
+    });
+    const uri = await storage.upload({
+      files: [p0],
+    });
+    console.log("uri : ", uri);
   };
 
   const handleSubmit = (e: React.FormEvent) => {

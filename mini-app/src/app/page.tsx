@@ -68,27 +68,22 @@ export default function Home() {
     useContext(WalletContext);
 
   useEffect(() => {
-    const bnbCHainId = "0x38";
-    // const bnbCHainId = '0x61'; // BNB testnet
+    // const bnbCHainId = "0x38";
+    const bnbCHainId = "0x61"; // BNB testnet
     if (isWalletConnected && chainId !== bnbCHainId) {
       switchChainId(bnbCHainId);
     }
   }, [isWalletConnected, chainId]);
 
   return (
-    <div className="flex flex-col h-screen bg-[#121212] text-white">
+    <div className="flex flex-col bg-[#121212] text-white">
       <div className=" p-6 border-b-2 border-[#333333]">
         <h1 className="text-4xl font-bold text-[#1DB954]">{t("title")}</h1>
         <p className="text-gray-300 mt-2">{t("description")}</p>
-        {address ? (
-          <Section>
-            <p className="bg-[#121212] text-gray-300 mt-2">
-              Address: {address}
-            </p>
-          </Section>
-        ) : (
-          <></>
-        )}
+
+        <Section>
+          <p className="bg-[#121212] text-gray-300 mt-2">Address: {address}</p>
+        </Section>
       </div>
 
       <div className="flex-1 p-6 space-y-6">
