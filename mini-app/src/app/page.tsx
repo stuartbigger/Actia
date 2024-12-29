@@ -80,10 +80,15 @@ export default function Home() {
       <div className=" p-6 border-b-2 border-[#333333]">
         <h1 className="text-4xl font-bold text-[#1DB954]">{t("title")}</h1>
         <p className="text-gray-300 mt-2">{t("description")}</p>
-
-        <Section>
-          <p className="bg-[#121212] text-gray-300 mt-2">Address: {address}</p>
-        </Section>
+        {address ? (
+          <Section>
+            <p className="bg-[#121212] text-gray-300 mt-2">
+              Address: {address}
+            </p>
+          </Section>
+        ) : (
+          <></>
+        )}
       </div>
 
       <div className="flex-1 p-6 space-y-6">
