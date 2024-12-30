@@ -4,7 +4,7 @@ import { bscTestnet } from "viem/chains";
 
 const chain = bscTestnet;
 
-const challengeManagerAddress =
+export const challengeManagerAddress =
   deployedContracts[chain.id].ChallengeManager.address;
 const challengeManagerAbi = deployedContracts[chain.id].ChallengeManager.abi;
 

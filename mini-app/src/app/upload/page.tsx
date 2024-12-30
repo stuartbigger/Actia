@@ -1,18 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
-import { Upload, Send, Music } from "lucide-react";
+import React, { useContext, useState } from "react";
+import { Joystick, Upload, Send, Music } from "lucide-react";
 import { ThirdwebStorage } from "@thirdweb-dev/storage";
+import { challengeManagerAddress, joinChallengeTxData } from "@/util/contractCalls";
+import { WalletContext } from "@/components/WalletContext/WalletContext";
 
 export default function UploadPage() {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const {sendTransaction} = useContext(WalletContext);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
-      uploadData(e.target.files[0]);
     }
   };
   const uploadData = async (p0: File) => {
@@ -24,11 +26,24 @@ export default function UploadPage() {
       files: [p0],
     });
     console.log("uri : ", uri);
+    const fetchableUrl = uri.replace("ipfs://", "https://ipfs.io/ipfs/");
+    console.log("Fetchable URL: ", fetchableUrl);
+    const response = await fetch(fetchableUrl);
+    const data = await response.json();
+    const innerUri: string = data.files[0];
+    const CID = innerUri.replace("ipfs://", "");
+    console.log("Inner CID: ", CID);
+    return CID;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    if (!file) {return;}
     e.preventDefault();
     console.log("Submitted:", { title, author, file });
+    const cid = await uploadData(file);
+    const txData = joinChallengeTxData(title, author, cid);
+    await sendTransaction(challengeManagerAddress, txData);
     setTitle("");
     setAuthor("");
     setFile(null);

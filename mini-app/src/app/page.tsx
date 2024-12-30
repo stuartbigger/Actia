@@ -94,6 +94,10 @@ export default function Home() {
 
       <div className="flex-1 p-6 space-y-6">
         { currentChallenge ? (
+            <div>
+            { currentChallenge?.tracks.length < 2 &&
+                <button onClick={() => router.push("/upload")}>Join Game</button>
+            }
         <div
           onClick={() => handleRedirect(currentChallenge.id.toString())}
           className="cursor-pointer hover:bg-[#3E3E3E] bg-[#282828] p-6 rounded-lg shadow-md"
@@ -106,6 +110,7 @@ export default function Home() {
             <p className="text-lg font-bold text-gray-300">VS</p>
             <Track track={currentChallenge?.tracks.at(1)} />
           </div>
+        </div>
         </div>
         ) : "Not yet started" }
 
