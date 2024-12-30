@@ -20,8 +20,12 @@ export default function SpotifyStyleTelegramMusicBetting() {
 
   const togglePlay = (trackKey: number) => {
     setPlayingTrack(playingTrack === trackKey ? -1 : trackKey);
+
+    const trackCid = challenge?.tracks.find((track) => Number(track.id) === trackKey)?.cid;
+    const trackSrc = `https://ipfs.io/ipfs/${trackCid}`
     if (audioRef.current) {
       if (audioRef.current.paused) {
+        audioRef.current.src = trackSrc;
         audioRef.current.play();
       } else {
         audioRef.current.pause();
@@ -126,7 +130,6 @@ export default function SpotifyStyleTelegramMusicBetting() {
         )}
         <audio ref={audioRef}>
           <source
-            src="https://ipfs.io/ipfs/QmQ7gKRNTQVZ1RVodK2nmFfGp8jsi1nmeDNzNBM3XbphGD/adiye.mp3"
             type="audio/mpeg"
           />
           Your browser does not support the audio element.
