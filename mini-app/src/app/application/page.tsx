@@ -40,15 +40,15 @@ export default function SpotifyStyleTelegramMusicBetting() {
   };
 
   useEffect(() => {
-      async function init() {
-          if (!id) {
-              router.push("/");
-              return;
-          }
-          const challenge = await getChallenge(BigInt(id));
-          setChallenge(challenge);
+    async function init() {
+      if (!id) {
+        router.push("/");
+        return;
       }
-      init();
+      const challenge = await getChallenge(BigInt(id));
+      setChallenge(challenge);
+    }
+    init();
   }, []);
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-[#121212] text-white font-sans">
@@ -57,72 +57,73 @@ export default function SpotifyStyleTelegramMusicBetting() {
           ACTIA Music Betting
         </h1>
         {challenge && challenge.tracks.length > 0 ? (
-        <div>
-        <h2 className="text-xl text-gray-300 mt-2">Select a Track to Bet On</h2>
-        {challenge?.tracks.map((track) => (
-          <div
-            key={track.id}
-            className={`flex items-center justify-between p-4 rounded-lg transition-all duration-300 ease-in-out hover:bg-[#3E3E3E] cursor-pointer ${
-              selectedTrack === Number(track.id)
-                ? "bg-[#1DB954] text-black"
-                : "bg-[#282828] text-white"
-            }`}
-            onClick={() => setSelectedTrack(Number(track.id))}
-          >
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  togglePlay(Number(track.id));
-                }}
-                className={`w-12 h-12 text-black rounded-full flex items-center justify-center transition-all duration-300 ${
+          <div className="space-y-4">
+            <h2 className="text-xl text-gray-300 mt-2">
+              Select a Track to Bet On
+            </h2>
+            {challenge?.tracks.map((track) => (
+              <div
+                key={track.id}
+                className={`flex items-center justify-between p-4 rounded-lg transition-all duration-300 ease-in-out hover:bg-[#3E3E3E] cursor-pointer ${
                   selectedTrack === Number(track.id)
-                    ? "bg-[#1ed760]"
-                    : "bg-[#1DB954] hover:bg-[#1ed760]"
+                    ? "bg-[#1DB954] text-black"
+                    : "bg-[#282828] text-white"
                 }`}
+                onClick={() => setSelectedTrack(Number(track.id))}
               >
-                {playingTrack === Number(track.id) ? (
-                  <Pause className="w-6 h-6" />
-                ) : (
-                  <Play className="w-6 h-6" />
-                )}
-              </button>
-              <div className="flex flex-col">
-                <p className="font-semibold text-lg">
-                  {track.trackName}
-                </p>
-                <p className="text-sm opacity-75">
-                  {track.artist}
-                </p>
-                <p
-                  className={`text-sm ${selectedTrack === Number(track.id) ? "text-black" : "text-gray-400"}`}
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      togglePlay(Number(track.id));
+                    }}
+                    className={`w-12 h-12 text-black rounded-full flex items-center justify-center transition-all duration-300 ${
+                      selectedTrack === Number(track.id)
+                        ? "bg-[#1ed760]"
+                        : "bg-[#1DB954] hover:bg-[#1ed760]"
+                    }`}
+                  >
+                    {playingTrack === Number(track.id) ? (
+                      <Pause className="w-6 h-6" />
+                    ) : (
+                      <Play className="w-6 h-6" />
+                    )}
+                  </button>
+                  <div className="flex flex-col">
+                    <p className="font-semibold text-lg">{track.trackName}</p>
+                    <p className="text-sm opacity-75">{track.artist}</p>
+                    <p
+                      className={`text-sm ${selectedTrack === Number(track.id) ? "text-black" : "text-gray-400"}`}
+                    >
+                      Votes:{" "}
+                      {
+                        // TODO: Get votes
+                        "0"
+                      }
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedTrack(Number(track.id));
+                  }}
+                  className={`px-4 py-2 text-black rounded-full text-xs font-medium transition-colors ${
+                    selectedTrack === Number(track.id)
+                      ? "bg-[#1ed760]"
+                      : "bg-[#1DB954] hover:bg-[#1ed760]"
+                  }`}
                 >
-                  Votes: {
-                      // TODO: Get votes
-                      "0"
-                  }
-                </p>
+                  Bet in BNB
+                </button>
               </div>
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedTrack(Number(track.id));
-              }}
-              className={`px-4 py-2 text-black rounded-full text-xs font-medium transition-colors ${
-                selectedTrack === Number(track.id)
-                  ? "bg-[#1ed760]"
-                  : "bg-[#1DB954] hover:bg-[#1ed760]"
-              }`}
-            >
-              Bet in BNB
-            </button>
+            ))}
           </div>
-        ))}
-        </div>
-        ) : 
-        <h2 className="text-xl text-gray-300 mt-2">No tracks in challenge yet</h2>
-        }
+        ) : (
+          <h2 className="text-xl text-gray-300 mt-2">
+            No tracks in challenge yet
+          </h2>
+        )}
         <audio ref={audioRef}>
           <source
             src="https://ipfs.io/ipfs/QmQ7gKRNTQVZ1RVodK2nmFfGp8jsi1nmeDNzNBM3XbphGD/adiye.mp3"
