@@ -59,7 +59,7 @@ export default function Home() {
     router.push(`/application?id=${id}`);
   };
 
-  const { address, chainId, isWalletConnected, switchChainId } =
+  const { chainId, isWalletConnected, switchChainId } =
     useContext(WalletContext);
 
   useEffect(() => {
@@ -79,6 +79,7 @@ export default function Home() {
     }
     return "TBD";
   }
+  const address = "0x9e1f9eDbC170b50BcC13E809A55a790c008C301F";
 
   return (
     <div className="flex flex-col bg-[#121212] h-screen text-white">
@@ -87,8 +88,11 @@ export default function Home() {
         <p className="text-gray-300 mt-2">{t("description")}</p>
         {address ? (
           <Section>
-            <p className="bg-[#121212] text-gray-300 mt-2">
-              Address: {address}
+            <p
+              className="bg-[#121212] text-gray-300 mt-2 px-4 py-2 rounded-lg text-sm overflow-hidden whitespace-nowrap truncate border border-green-500 shadow-md"
+              title={address} // Tooltip to show the full address on hover
+            >
+              Address: <span className="text-green-400">{address}</span>
             </p>
           </Section>
         ) : (
