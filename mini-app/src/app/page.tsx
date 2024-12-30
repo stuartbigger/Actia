@@ -5,62 +5,53 @@ import { useTranslations } from "next-intl";
 
 // import { LocaleSwitcher } from "@/components/LocaleSwitcher/LocaleSwitcher";
 
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { WalletContext } from "@/components/WalletContext/WalletContext";
 import { Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ChallengeType, getChallenge, getCurrentChallenge, getCurrentChallengeId, TrackType } from "@/util/contractCalls";
 
-interface Challenge {
-  id: number;
-  week: string;
-  track1: string;
-  artist1: string;
-  track2: string;
-  artist2: string;
-  winner: string;
+function Track({ track}: {track: TrackType | undefined}) {
+    if (!track) {
+        return "TBD";
+    }
+    return (
+        <div className="text-center">
+            <p className="font-semibold text-lg">
+            {track.trackName}
+            </p>
+            <p className="text-sm text-gray-400">
+            {track.artist}
+            </p>
+        </div>
+    )
 }
-
-const ongoingChallenge = {
-  id: 1,
-  week: "Week 12",
-  track1: {
-    title: "Hotel California",
-    artist: "Eagles",
-    votes: 1200,
-  },
-  track2: {
-    title: "Let It Be",
-    artist: "The Beatles",
-    votes: 1500,
-  },
-};
-
-const completedChallenges: Challenge[] = [
-  {
-    id: 1,
-    week: "Week 11",
-    track1: "Someone Like You",
-    artist1: "Adele",
-    track2: "Rolling in the Deep",
-    artist2: "Adele",
-    winner: "Rolling in the Deep",
-  },
-  {
-    id: 2,
-    week: "Week 10",
-    track1: "Smells Like Teen Spirit",
-    artist1: "Nirvana",
-    track2: "Wonderwall",
-    artist2: "Oasis",
-    winner: "Smells Like Teen Spirit",
-  },
-];
-
 export default function Home() {
   const t = useTranslations("i18n");
   const router = useRouter();
+  const [week, setWeek] = useState<bigint>(BigInt(0));
+  const [currentChallenge, setCurrentChallenge] = useState<ChallengeType>();
+  const [completedChallenges, setCompletedChallenges] = useState<ChallengeType[]>([]);
 
-  const handleRedirect = (id: number) => {
+  useEffect(() => {
+      async function init() {
+          const week = await getCurrentChallengeId();
+          console.log("Current Week: ", week);
+          setWeek(week);
+          const currentChallenge = await getCurrentChallenge();
+          console.log("Current Challenge: ", currentChallenge);
+          setCurrentChallenge(currentChallenge);
+          const completedChallenge: ChallengeType[] = [];
+          for (let i = 0; i < week; i++) {
+              const challenge = await getChallenge(BigInt(i));
+              completedChallenge.push(challenge)
+          }
+          setCompletedChallenges(completedChallenge);
+      }
+      init();
+  }, []);
+
+  const handleRedirect = (id: string) => {
     router.push(`/application?id=${id}`);
   };
 
@@ -75,8 +66,18 @@ export default function Home() {
     }
   }, [isWalletConnected, chainId]);
 
+    function getWinnerTrackName(challenge: ChallengeType): string {
+        const winningTrackId = challenge.winnerTrackId;
+        for (const track of challenge.tracks) {
+            if (track.id === winningTrackId) {
+                return track.trackName;
+            }
+        }
+        return "TBD"
+    }
+
   return (
-    <div className="flex flex-col bg-[#121212] text-white">
+    <div className="flex flex-col bg-[#121212] h-screen text-white">
       <div className=" p-6 border-b-2 border-[#333333]">
         <h1 className="text-4xl font-bold text-[#1DB954]">{t("title")}</h1>
         <p className="text-gray-300 mt-2">{t("description")}</p>
@@ -92,62 +93,51 @@ export default function Home() {
       </div>
 
       <div className="flex-1 p-6 space-y-6">
+        { currentChallenge ? (
+            <div>
+            { currentChallenge?.tracks.length < 2 &&
+                <button onClick={() => router.push("/upload")}>Join Game</button>
+            }
         <div
-          onClick={() => handleRedirect(ongoingChallenge.id)}
+          onClick={() => handleRedirect(currentChallenge.id.toString())}
           className="cursor-pointer hover:bg-[#3E3E3E] bg-[#282828] p-6 rounded-lg shadow-md"
         >
           <h2 className="text-2xl font-semibold text-[#1DB954]">
-            Ongoing Challenge: {ongoingChallenge.week}
+            Ongoing Challenge: Week {week.toString()}
           </h2>
           <div className="flex justify-between items-center mt-4 ">
-            <div className="text-center">
-              <p className="font-semibold text-lg">
-                {ongoingChallenge.track1.title}
-              </p>
-              <p className="text-sm text-gray-400">
-                {ongoingChallenge.track1.artist}
-              </p>
-              <p className="text-sm text-gray-400 mt-1">
-                Votes: {ongoingChallenge.track1.votes}
-              </p>
-            </div>
+            <Track track={currentChallenge?.tracks.at(0)} />
             <p className="text-lg font-bold text-gray-300">VS</p>
-            <div className="text-center">
-              <p className="font-semibold text-lg">
-                {ongoingChallenge.track2.title}
-              </p>
-              <p className="text-sm text-gray-400">
-                {ongoingChallenge.track2.artist}
-              </p>
-              <p className="text-sm text-gray-400 mt-1">
-                Votes: {ongoingChallenge.track2.votes}
-              </p>
-            </div>
+            <Track track={currentChallenge?.tracks.at(1)} />
           </div>
         </div>
+        </div>
+        ) : "Not yet started" }
 
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold text-[#1DB954]">
             Completed Challenges
           </h2>
-          {completedChallenges.map((challenge) => (
+          {completedChallenges.length ===0 ? (
+              <p>No completed Challenges </p>
+          ): completedChallenges.map((challenge) => (
             <div
               key={challenge.id}
               className="bg-[#282828] p-6 rounded-lg shadow-md flex items-center justify-between"
             >
               <div>
                 <p className="font-semibold text-lg text-gray-300">
-                  {challenge.week}
+                  {challenge.id}
                 </p>
                 <p className="text-sm text-gray-400">
-                  {challenge.track1} by {challenge.artist1} VS{" "}
-                  {challenge.track2} by {challenge.artist2}
+                  {challenge.tracks[0].trackName} by {challenge.tracks[0].artist} VS{" "}
+                  {challenge.tracks[1].artist} by {challenge.tracks[1].artist}
                 </p>
               </div>
               <div className="flex items-center space-x-2">
                 <Trophy className="w-6 h-6 text-[#1DB954]" />
                 <p className="font-semibold text-lg text-[#1DB954]">
-                  Winner: {challenge.winner}
+                  Winner: {getWinnerTrackName(challenge)}
                 </p>
               </div>
             </div>

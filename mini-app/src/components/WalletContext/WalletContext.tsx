@@ -8,7 +8,7 @@ export const WalletContext = createContext<{
   chainId: string;
   isWalletConnected: boolean;
   switchChainId: (chain: string) => Promise<void>;
-  sendTransaction?: (to: string, value: number) => Promise<void>;
+  sendTransaction: (to: string, data: string) => Promise<void>;
   getChainId?: () => Promise<string>;
   getAccounts?: () => Promise<string>;
   initializeWallet: () => Promise<void>;
@@ -17,6 +17,7 @@ export const WalletContext = createContext<{
   chainId: "",
   isWalletConnected: false,
   switchChainId: async () => {},
+  sendTransaction: async () => {},
   initializeWallet: async () => {},
 });
 
@@ -87,24 +88,26 @@ export function WalletProvider({
     }
   }, []);
 
-  const sendTransaction = async (to: string, value: number) => {
+  const sendTransaction = async (to: string, data: string) => {
     if (!ethereum) {
       return;
     }
     const transactionParameters = {
       to,
       from: address,
-      value, // Value in wei
+      data
     };
 
     const txHash = await ethereum.request({
       method: "eth_sendTransaction",
       params: [transactionParameters],
     });
+    console.log("Sent transaction: ", txHash);
     const receipt = await ethereum.request({
       method: "eth_getTransactionReceipt",
       params: [txHash],
     });
+    console.log("Transaction receipt: ", receipt);
 
     return receipt;
   };
