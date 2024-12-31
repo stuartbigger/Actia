@@ -3,7 +3,12 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import { Play, Pause, Send, TrendingUp } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { buyTxParams, ChallengeType, getChallenge, sellTxParams } from "@/util/contractCalls";
+import {
+  buyTxParams,
+  ChallengeType,
+  getChallenge,
+  sellTxParams,
+} from "@/util/contractCalls";
 import { WalletContext } from "@/components/WalletContext/WalletContext";
 
 export default function SpotifyStyleTelegramMusicBetting() {
@@ -12,7 +17,8 @@ export default function SpotifyStyleTelegramMusicBetting() {
   const [betAmount, setBetAmount] = useState<string>("0.2");
   const [messages, setMessages] = useState<string[]>([]);
   const [playingTrack, setPlayingTrack] = useState<number>(-1);
-  const {sendTransaction} = useContext(WalletContext);
+  const { sendTransaction } = useContext(WalletContext);
+  const [action, setAction] = useState<"buy" | "sell">("buy");
 
   const router = useRouter();
 
@@ -22,7 +28,7 @@ export default function SpotifyStyleTelegramMusicBetting() {
 
   const togglePlay = (trackKey: number) => {
     const trackCid = challenge?.tracks.find(
-      (track) => Number(track.id) === trackKey,
+      (track) => Number(track.id) === trackKey
     )?.cid;
     const trackSrc = `https://ipfs.io/ipfs/${trackCid}`;
 
@@ -44,15 +50,28 @@ export default function SpotifyStyleTelegramMusicBetting() {
   const handleBuy = async () => {
     if (challenge && selectedTrack !== -1 && betAmount) {
       console.log(challenge);
-      const amount = BigInt(parseFloat(betAmount)*(10**18));
-      const selectedTrackIdx = challenge?.tracks.findIndex( (track) => Number(track.id) === selectedTrack);
-      if (selectedTrackIdx === -1) { 
-          console.log("Cannot find track, ", selectedTrack);
-          return; 
+      const amount = BigInt(parseFloat(betAmount) * 10 ** 18);
+      const selectedTrackIdx = challenge?.tracks.findIndex(
+        (track) => Number(track.id) === selectedTrack
+      );
+      if (selectedTrackIdx === -1) {
+        console.log("Cannot find track, ", selectedTrack);
+        return;
       }
       const selected = challenge.tracks[selectedTrackIdx];
-      const txParams = buyTxParams(challenge.marketMaker, amount, BigInt(selectedTrackIdx), BigInt(0));
-      console.log(challenge.marketMaker, amount, BigInt(selectedTrackIdx), BigInt(0), txParams)
+      const txParams = buyTxParams(
+        challenge.marketMaker,
+        amount,
+        BigInt(selectedTrackIdx),
+        BigInt(0)
+      );
+      console.log(
+        challenge.marketMaker,
+        amount,
+        BigInt(selectedTrackIdx),
+        BigInt(0),
+        txParams
+      );
       await sendTransaction(txParams);
       const message = `You bet ${betAmount} BNB on "${selected.trackName}" by ${selected.artist}`;
       setMessages([...messages, message]);
@@ -64,14 +83,21 @@ export default function SpotifyStyleTelegramMusicBetting() {
   const handleSell = async () => {
     if (challenge && selectedTrack !== -1 && betAmount) {
       console.log(challenge);
-      const amount = BigInt(parseFloat(betAmount)*(10**18));
-      const selectedTrackIdx = challenge?.tracks.findIndex( (track) => Number(track.id) === selectedTrack);
-      if (selectedTrackIdx === -1) { 
-          console.log("Cannot find track, ", selectedTrack);
-          return; 
+      const amount = BigInt(parseFloat(betAmount) * 10 ** 18);
+      const selectedTrackIdx = challenge?.tracks.findIndex(
+        (track) => Number(track.id) === selectedTrack
+      );
+      if (selectedTrackIdx === -1) {
+        console.log("Cannot find track, ", selectedTrack);
+        return;
       }
       const selected = challenge.tracks[selectedTrackIdx];
-      const txParams = sellTxParams(challenge.marketMaker, amount, BigInt(selectedTrackIdx), amount);
+      const txParams = sellTxParams(
+        challenge.marketMaker,
+        amount,
+        BigInt(selectedTrackIdx),
+        amount
+      );
       await sendTransaction(txParams);
       const message = `You bet ${betAmount} BNB on "${selected.trackName}" by ${selected.artist}`;
       setMessages([...messages, message]);
@@ -142,6 +168,24 @@ export default function SpotifyStyleTelegramMusicBetting() {
                         "0"
                       }
                     </p>
+                    <p
+                      className={`text-sm ${
+                        selectedTrack === Number(track.id)
+                          ? "text-black"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      Buy Price: <span className="font-medium">0.1 USDB</span>
+                    </p>
+                    <p
+                      className={`text-sm ${
+                        selectedTrack === Number(track.id)
+                          ? "text-black"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      Sell Price: <span className="font-medium">0.2 USDB</span>
+                    </p>
                   </div>
                 </div>
                 <button
@@ -155,7 +199,7 @@ export default function SpotifyStyleTelegramMusicBetting() {
                       : "bg-[#1DB954] hover:bg-[#1ed760]"
                   }`}
                 >
-                  Bet in BNB
+                  Bet in USDB
                 </button>
               </div>
             ))}
@@ -183,27 +227,59 @@ export default function SpotifyStyleTelegramMusicBetting() {
         </div>
 
         {selectedTrack !== -1 && (
-          <div className="flex items-center space-x-4 bg-[#282828] p-4 rounded-lg">
-            <input
-              type="number"
-              value={betAmount}
-              onChange={(e) => setBetAmount(e.target.value)}
-              placeholder="Enter Bet Amount"
-              className="flex-1 p-3 bg-[#3E3E3E] text-white border-none rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1DB954]"
-            />
+          <div className="flex flex-col bg-[#282828] p-4 rounded-lg space-y-4">
+            {/* Tab for Buy and Sell */}
+            <div className="flex space-x-4">
+              <button
+                onClick={() => setAction("buy")}
+                className={`flex-1 text-center p-3 rounded-lg transition-all ${
+                  action === "buy"
+                    ? "bg-[#1DB954] text-black"
+                    : "bg-[#3E3E3E] text-white hover:bg-[#3E3E3E]"
+                }`}
+              >
+                Buy
+              </button>
+              <button
+                onClick={() => setAction("sell")}
+                className={`flex-1 text-center p-3 rounded-lg transition-all ${
+                  action === "sell"
+                    ? "bg-[#1DB954] text-black"
+                    : "bg-[#3E3E3E] text-white hover:bg-[#3E3E3E]"
+                }`}
+              >
+                Sell
+              </button>
+            </div>
+
+            {/* Input Field */}
+            <div>
+              <input
+                type="number"
+                value={betAmount}
+                onChange={(e) => setBetAmount(e.target.value)}
+                placeholder="Enter Bet Amount"
+                className="w-full p-3 bg-[#3E3E3E] text-white border-none rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1DB954]"
+              />
+            </div>
+
+            {/* Common Button */}
             <button
-              onClick={handleBuy}
+              onClick={action === "buy" ? handleBuy : handleSell}
               disabled={!betAmount}
-              className="bg-[#1DB954] text-black p-3 rounded-full disabled:opacity-50 hover:bg-[#1ED760] transition-all"
+              className="w-full bg-[#1DB954] text-black p-3 rounded-lg disabled:opacity-50 hover:bg-[#1ED760] transition-all flex items-center justify-center space-x-2"
             >
-              <Send className="w-6 h-6" />
-            </button>
-            <button
-              onClick={handleSell}
-              disabled={!betAmount}
-              className="bg-[#1DB954] text-black p-3 rounded-full disabled:opacity-50 hover:bg-[#1ED760] transition-all"
-            >
-              <TrendingUp className="w-6 h-6" />
+              {action === "buy" ? (
+                <>
+                  <Send className="w-6 h-6" />
+                  <span>Buy</span>
+                </>
+              ) : (
+                <>
+                  <TrendingUp className="w-6 h-6" />
+                  <span>Sell</span>
+                </>
+              )}
             </button>
           </div>
         )}

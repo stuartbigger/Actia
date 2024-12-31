@@ -46,7 +46,7 @@ export default function Home() {
       console.log("Current Challenge: ", currentChallenge);
       setCurrentChallenge(currentChallenge);
       const completedChallenge: ChallengeType[] = [];
-      for (let i = 0; i < week; i++) {
+      for (let i = 0; i <= week; i++) {
         const challenge = await getChallenge(BigInt(i));
         completedChallenge.push(challenge);
       }
@@ -129,22 +129,31 @@ export default function Home() {
             completedChallenges.map((challenge) => (
               <div
                 key={challenge.id}
-                className="bg-[#282828] p-6 rounded-lg shadow-md flex items-center justify-between"
+                className="bg-[#282828] p-6 rounded-lg shadow-md flex flex-col space-y-4"
               >
-                <div>
-                  <p className="font-semibold text-lg text-gray-300">
-                    {challenge.id}
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    {challenge.tracks[0].trackName} by{" "}
-                    {challenge.tracks[0].artist} VS {challenge.tracks[1].artist}{" "}
-                    by {challenge.tracks[1].artist}
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-lg text-gray-300">
+                      {challenge.id}
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      {challenge.tracks[0].trackName} by{" "}
+                      {challenge.tracks[0].artist} VS{" "}
+                      {challenge.tracks[1].trackName} by{" "}
+                      {challenge.tracks[1].artist}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Trophy className="w-6 h-6 text-[#1DB954]" />
+                    <p className="font-semibold text-lg text-[#1DB954]">
+                      Winner: {getWinnerTrackName(challenge)}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Trophy className="w-6 h-6 text-[#1DB954]" />
-                  <p className="font-semibold text-lg text-[#1DB954]">
-                    Winner: {getWinnerTrackName(challenge)}
+                <div className="mt-2 p-4 bg-[#1DB954] bg-opacity-20 rounded-md">
+                  <p className="text-sm text-[#1DB954] font-medium">
+                    Criteria: The winning track was chosen based on listener
+                    engagement, playlist popularity, and overall vibes.
                   </p>
                 </div>
               </div>
