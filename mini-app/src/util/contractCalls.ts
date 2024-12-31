@@ -126,3 +126,26 @@ export function sellTxParams(
     data: encodedData,
   };
 }
+
+export async function calcBuyAmount(marketMakerAddress: `0x${string}`, outcomeIndex: bigint) {
+  const buyAmount = await publicClient.readContract({
+    address: marketMakerAddress,
+    abi: fixedProductMarketMakerAbi,
+    functionName: "calcBuyAmount",
+    args: [BigInt(1*(10**18)), outcomeIndex]
+  });
+  console.log(buyAmount);
+  return buyAmount;
+}
+
+export async function calcSellAmount(marketMakerAddress: `0x${string}`, outcomeIndex: bigint) {
+  const sellAmount = await publicClient.readContract({
+    address: marketMakerAddress,
+    abi: fixedProductMarketMakerAbi,
+    functionName: "calcSellAmount",
+    args: [BigInt(1*(10**18)), outcomeIndex]
+  });
+  console.log(sellAmount);
+  return sellAmount;
+}
+

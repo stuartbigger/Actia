@@ -46,7 +46,7 @@ export default function Home() {
       console.log("Current Challenge: ", currentChallenge);
       setCurrentChallenge(currentChallenge);
       const completedChallenge: ChallengeType[] = [];
-      for (let i = 0; i <= week; i++) {
+      for (let i = 0; i < week; i++) {
         const challenge = await getChallenge(BigInt(i));
         completedChallenge.push(challenge);
       }
@@ -150,12 +150,13 @@ export default function Home() {
                     </p>
                   </div>
                 </div>
+                { challenge.criteria && 
                 <div className="mt-2 p-4 bg-[#1DB954] bg-opacity-20 rounded-md">
                   <p className="text-sm text-[#1DB954] font-medium">
-                    Criteria: The winning track was chosen based on listener
-                    engagement, playlist popularity, and overall vibes.
+                    Criteria: {challenge.criteria}
                   </p>
                 </div>
+                }
               </div>
             ))
           )}

@@ -5,11 +5,18 @@ import { Play, Pause, Send, TrendingUp } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   buyTxParams,
+  calcBuyAmount,
+  calcSellAmount,
   ChallengeType,
   getChallenge,
   sellTxParams,
 } from "@/util/contractCalls";
 import { WalletContext } from "@/components/WalletContext/WalletContext";
+
+type Price = {
+  buyPrice: bigint;
+  sellPrice: bigint;
+};
 
 export default function SpotifyStyleTelegramMusicBetting() {
   const [selectedTrack, setSelectedTrack] = useState<number>(-1);
@@ -19,6 +26,7 @@ export default function SpotifyStyleTelegramMusicBetting() {
   const [playingTrack, setPlayingTrack] = useState<number>(-1);
   const { sendTransaction } = useContext(WalletContext);
   const [action, setAction] = useState<"buy" | "sell">("buy");
+  const [prices, setPrices] = useState<Price[]>([]);
 
   const router = useRouter();
 
@@ -28,7 +36,7 @@ export default function SpotifyStyleTelegramMusicBetting() {
 
   const togglePlay = (trackKey: number) => {
     const trackCid = challenge?.tracks.find(
-      (track) => Number(track.id) === trackKey
+      (track) => Number(track.id) === trackKey,
     )?.cid;
     const trackSrc = `https://ipfs.io/ipfs/${trackCid}`;
 
@@ -52,7 +60,7 @@ export default function SpotifyStyleTelegramMusicBetting() {
       console.log(challenge);
       const amount = BigInt(parseFloat(betAmount) * 10 ** 18);
       const selectedTrackIdx = challenge?.tracks.findIndex(
-        (track) => Number(track.id) === selectedTrack
+        (track) => Number(track.id) === selectedTrack,
       );
       if (selectedTrackIdx === -1) {
         console.log("Cannot find track, ", selectedTrack);
@@ -63,14 +71,14 @@ export default function SpotifyStyleTelegramMusicBetting() {
         challenge.marketMaker,
         amount,
         BigInt(selectedTrackIdx),
-        BigInt(0)
+        BigInt(0),
       );
       console.log(
         challenge.marketMaker,
         amount,
         BigInt(selectedTrackIdx),
         BigInt(0),
-        txParams
+        txParams,
       );
       await sendTransaction(txParams);
       const message = `You bet ${betAmount} BNB on "${selected.trackName}" by ${selected.artist}`;
@@ -85,7 +93,7 @@ export default function SpotifyStyleTelegramMusicBetting() {
       console.log(challenge);
       const amount = BigInt(parseFloat(betAmount) * 10 ** 18);
       const selectedTrackIdx = challenge?.tracks.findIndex(
-        (track) => Number(track.id) === selectedTrack
+        (track) => Number(track.id) === selectedTrack,
       );
       if (selectedTrackIdx === -1) {
         console.log("Cannot find track, ", selectedTrack);
@@ -96,7 +104,7 @@ export default function SpotifyStyleTelegramMusicBetting() {
         challenge.marketMaker,
         amount,
         BigInt(selectedTrackIdx),
-        amount
+        amount,
       );
       await sendTransaction(txParams);
       const message = `You bet ${betAmount} BNB on "${selected.trackName}" by ${selected.artist}`;
@@ -114,6 +122,19 @@ export default function SpotifyStyleTelegramMusicBetting() {
       }
       const challenge = await getChallenge(BigInt(id));
       setChallenge(challenge);
+      // const prices: Price[] = await Promise.all(
+      //   challenge.tracks.map(async (_, idx) => {
+      //     const sellPrice = await calcSellAmount(challenge.marketMaker, BigInt(idx));
+      //     console.log(sellPrice)
+      //     const buyPrice = await calcBuyAmount(challenge.marketMaker, BigInt(idx));
+      //     console.log(buyPrice)
+      //     return {
+      //       buyPrice,
+      //       sellPrice
+      //     };
+      //   }),
+      // );
+      // setPrices(prices);
     }
     init();
   }, []);
@@ -128,7 +149,7 @@ export default function SpotifyStyleTelegramMusicBetting() {
             <h2 className="text-xl text-gray-300 mt-2">
               Select a Track to Bet On
             </h2>
-            {challenge?.tracks.map((track) => (
+            {challenge?.tracks.map((track, idx) => (
               <div
                 key={track.id}
                 className={`flex items-center justify-between p-4 rounded-lg transition-all duration-300 ease-in-out hover:bg-[#3E3E3E] cursor-pointer ${
@@ -175,7 +196,7 @@ export default function SpotifyStyleTelegramMusicBetting() {
                           : "text-gray-400"
                       }`}
                     >
-                      Buy Price: <span className="font-medium">0.1 USDB</span>
+                      Buy Price: <span className="font-medium">{prices.length > 0 ? prices[idx].buyPrice.toString() : 0} USDB</span>
                     </p>
                     <p
                       className={`text-sm ${
@@ -184,7 +205,7 @@ export default function SpotifyStyleTelegramMusicBetting() {
                           : "text-gray-400"
                       }`}
                     >
-                      Sell Price: <span className="font-medium">0.2 USDB</span>
+                      Sell Price: <span className="font-medium">{prices.length > 0 ? prices[idx].sellPrice.toString() : 0} USDB</span>
                     </p>
                   </div>
                 </div>
@@ -201,6 +222,7 @@ export default function SpotifyStyleTelegramMusicBetting() {
                 >
                   Bet in USDB
                 </button>
+                {""}
               </div>
             ))}
           </div>
