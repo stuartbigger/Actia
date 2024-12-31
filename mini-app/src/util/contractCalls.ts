@@ -1,17 +1,30 @@
-import { createPublicClient, encodeFunctionData, http } from "viem";
+import {
+  createPublicClient,
+  encodeFunctionData,
+  http,
+} from "viem";
 import deployedContracts from "../../../contracts/deployments/deployedContracts";
 import { bscTestnet } from "viem/chains";
+import FixedPositionMarketMaker from "./FixedProductMarketMaker";
 
 const chain = bscTestnet;
 
-export const challengeManagerAddress =
+const challengeManagerAddress =
   deployedContracts[chain.id].ChallengeManager.address;
 const challengeManagerAbi = deployedContracts[chain.id].ChallengeManager.abi;
+
+const fixedProductMarketMakerAbi = FixedPositionMarketMaker.abi;
 
 const publicClient = createPublicClient({
   chain: chain,
   transport: http(),
 });
+
+export type TxParams = {
+  to?: string;
+  from?: string;
+  data?: string;
+};
 
 export type TrackType = {
   id: bigint;
@@ -64,15 +77,52 @@ export async function getChallenge(challegeId: bigint): Promise<ChallengeType> {
   return challenge;
 }
 
-export function joinChallengeTxData(
+export function joinChallengeTxParams(
   trackName: string,
   artist: string,
   cid: string,
-): string {
-  const encodedCall = encodeFunctionData({
+): TxParams {
+  const encodedData = encodeFunctionData({
     abi: challengeManagerAbi,
     functionName: "joinChallenge",
     args: [trackName, artist, cid],
   });
-  return encodedCall;
+  return {
+    to: challengeManagerAddress,
+    data: encodedData,
+  };
+}
+
+export function buyTxParams(
+  marketMakerAddress: string,
+  investmentAmount: bigint,
+  outcomeIndex: bigint,
+  minOutcomeTokensToBuy: bigint,
+): TxParams {
+  const encodedData = encodeFunctionData({
+    abi: fixedProductMarketMakerAbi,
+    functionName: "buy",
+    args: [investmentAmount, outcomeIndex, minOutcomeTokensToBuy],
+  });
+  return {
+    to: marketMakerAddress,
+    data: encodedData,
+  };
+}
+
+export function sellTxParams(
+  marketMakerAddress: string,
+  returnAmount: bigint,
+  outcomeIndex: bigint,
+  maxOutcomeTokensToSell: bigint,
+): TxParams {
+  const encodedData = encodeFunctionData({
+    abi: fixedProductMarketMakerAbi,
+    functionName: "sell",
+    args: [returnAmount, outcomeIndex, maxOutcomeTokensToSell],
+  });
+  return {
+    to: marketMakerAddress,
+    data: encodedData,
+  };
 }

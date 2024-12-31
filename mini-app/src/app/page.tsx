@@ -59,16 +59,7 @@ export default function Home() {
     router.push(`/application?id=${id}`);
   };
 
-  const { chainId, isWalletConnected, switchChainId } =
-    useContext(WalletContext);
-
-  useEffect(() => {
-    // const bnbCHainId = "0x38";
-    const bnbCHainId = "0x61"; // BNB testnet
-    if (isWalletConnected && chainId !== bnbCHainId) {
-      switchChainId(bnbCHainId);
-    }
-  }, [isWalletConnected, chainId]);
+  const { address } = useContext(WalletContext);
 
   function getWinnerTrackName(challenge: ChallengeType): string {
     const winningTrackId = challenge.winnerTrackId;
@@ -79,7 +70,6 @@ export default function Home() {
     }
     return "TBD";
   }
-  const address = "0x9e1f9eDbC170b50BcC13E809A55a790c008C301F";
 
   return (
     <div className="flex flex-col bg-[#121212] h-screen text-white">

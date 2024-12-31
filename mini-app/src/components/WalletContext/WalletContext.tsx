@@ -2,13 +2,14 @@
 
 import React, { createContext, useEffect, useState } from "react";
 import { EthereumProvider } from "@uxuycom/web3-tg-sdk";
+import { TxParams } from "@/util/contractCalls";
 
 export const WalletContext = createContext<{
   address: string;
   chainId: string;
   isWalletConnected: boolean;
   switchChainId: (chain: string) => Promise<void>;
-  sendTransaction: (to: string, data: string) => Promise<void>;
+  sendTransaction: (txParams: TxParams) => Promise<void>;
   getChainId?: () => Promise<string>;
   getAccounts?: () => Promise<string>;
   initializeWallet: () => Promise<void>;
@@ -21,11 +22,7 @@ export const WalletContext = createContext<{
   initializeWallet: async () => {},
 });
 
-export function WalletProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [isClient, setIsClient] = useState(false);
   const [address, setAddress] = useState("");
   const [chainId, setChainId] = useState("");
@@ -75,6 +72,12 @@ export function WalletProvider({
       console.log("Network changed to:", changedChainId);
     });
     setIsWalletConnected(true);
+    // const bnbCHainId = "0x38";
+    const bnbCHainId = "0x61"; // BNB testnet
+    if (isWalletConnected && chainId !== bnbCHainId) {
+      await switchChainId(bnbCHainId);
+    }
+    console.log("Chain ID: ", await getChainId());
   };
 
   useEffect(() => {
@@ -88,26 +91,30 @@ export function WalletProvider({
     }
   }, []);
 
-  const sendTransaction = async (to: string, data: string) => {
+  const sendTransaction = async (txParams: TxParams) => {
     if (!ethereum) {
       return;
     }
-    const transactionParameters = {
-      to,
+    txParams = {
+      ...txParams,
       from: address,
-      data
     };
 
     const txHash = await ethereum.request({
       method: "eth_sendTransaction",
-      params: [transactionParameters],
+      params: [txParams],
     });
+    let receipt = null;
     console.log("Sent transaction: ", txHash);
-    const receipt = await ethereum.request({
-      method: "eth_getTransactionReceipt",
-      params: [txHash],
-    });
-    console.log("Transaction receipt: ", receipt);
+    try  {
+        receipt = await ethereum.request({
+          method: "eth_getTransactionReceipt",
+          params: [txHash],
+        });
+        console.log("Transaction receipt: ", receipt);
+    } catch (error) {
+        console.log(error);
+    }
 
     return receipt;
   };

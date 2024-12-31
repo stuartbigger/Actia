@@ -3,7 +3,7 @@
 import React, { useContext, useState } from "react";
 import { Joystick, Upload, Send, Music } from "lucide-react";
 import { ThirdwebStorage } from "@thirdweb-dev/storage";
-import { challengeManagerAddress, joinChallengeTxData } from "@/util/contractCalls";
+import { challengeManagerAddress, joinChallengeTxParams } from "@/util/contractCalls";
 import { WalletContext } from "@/components/WalletContext/WalletContext";
 
 export default function UploadPage() {
@@ -42,8 +42,8 @@ export default function UploadPage() {
     e.preventDefault();
     console.log("Submitted:", { title, author, file });
     const cid = await uploadData(file);
-    const txData = joinChallengeTxData(title, author, cid);
-    await sendTransaction(challengeManagerAddress, txData);
+    const txParams = joinChallengeTxParams(title, author, cid);
+    await sendTransaction(txParams);
     setTitle("");
     setAuthor("");
     setFile(null);

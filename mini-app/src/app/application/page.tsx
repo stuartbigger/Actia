@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { Play, Pause, Send } from "lucide-react";
+import React, { useState, useRef, useEffect, useContext } from "react";
+import { Play, Pause, Send, TrendingUp } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChallengeType, getChallenge } from "@/util/contractCalls";
+import { buyTxParams, ChallengeType, getChallenge, sellTxParams } from "@/util/contractCalls";
+import { WalletContext } from "@/components/WalletContext/WalletContext";
 
 export default function SpotifyStyleTelegramMusicBetting() {
   const [selectedTrack, setSelectedTrack] = useState<number>(-1);
@@ -11,6 +12,7 @@ export default function SpotifyStyleTelegramMusicBetting() {
   const [betAmount, setBetAmount] = useState<string>("0.2");
   const [messages, setMessages] = useState<string[]>([]);
   const [playingTrack, setPlayingTrack] = useState<number>(-1);
+  const {sendTransaction} = useContext(WalletContext);
 
   const router = useRouter();
 
@@ -19,23 +21,58 @@ export default function SpotifyStyleTelegramMusicBetting() {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const togglePlay = (trackKey: number) => {
-    setPlayingTrack(playingTrack === trackKey ? -1 : trackKey);
+    const trackCid = challenge?.tracks.find(
+      (track) => Number(track.id) === trackKey,
+    )?.cid;
+    const trackSrc = `https://ipfs.io/ipfs/${trackCid}`;
 
-    const trackCid = challenge?.tracks.find((track) => Number(track.id) === trackKey)?.cid;
-    const trackSrc = `https://ipfs.io/ipfs/${trackCid}`
-    if (audioRef.current) {
-      if (audioRef.current.paused) {
+    if (playingTrack === trackKey) {
+      setPlayingTrack(-1);
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    } else {
+      setPlayingTrack(trackKey);
+      if (audioRef.current) {
+        audioRef.current.pause();
         audioRef.current.src = trackSrc;
         audioRef.current.play();
-      } else {
-        audioRef.current.pause();
       }
     }
   };
 
-  const handleBet = () => {
-    if (challenge && selectedTrack && betAmount) {
-      const selected = challenge.tracks[selectedTrack];
+  const handleBuy = async () => {
+    if (challenge && selectedTrack !== -1 && betAmount) {
+      console.log(challenge);
+      const amount = BigInt(parseFloat(betAmount)*(10**18));
+      const selectedTrackIdx = challenge?.tracks.findIndex( (track) => Number(track.id) === selectedTrack);
+      if (selectedTrackIdx === -1) { 
+          console.log("Cannot find track, ", selectedTrack);
+          return; 
+      }
+      const selected = challenge.tracks[selectedTrackIdx];
+      const txParams = buyTxParams(challenge.marketMaker, amount, BigInt(selectedTrackIdx), BigInt(0));
+      console.log(challenge.marketMaker, amount, BigInt(selectedTrackIdx), BigInt(0), txParams)
+      await sendTransaction(txParams);
+      const message = `You bet ${betAmount} BNB on "${selected.trackName}" by ${selected.artist}`;
+      setMessages([...messages, message]);
+      setSelectedTrack(-1);
+      setBetAmount("0.2");
+    }
+  };
+
+  const handleSell = async () => {
+    if (challenge && selectedTrack !== -1 && betAmount) {
+      console.log(challenge);
+      const amount = BigInt(parseFloat(betAmount)*(10**18));
+      const selectedTrackIdx = challenge?.tracks.findIndex( (track) => Number(track.id) === selectedTrack);
+      if (selectedTrackIdx === -1) { 
+          console.log("Cannot find track, ", selectedTrack);
+          return; 
+      }
+      const selected = challenge.tracks[selectedTrackIdx];
+      const txParams = sellTxParams(challenge.marketMaker, amount, BigInt(selectedTrackIdx), amount);
+      await sendTransaction(txParams);
       const message = `You bet ${betAmount} BNB on "${selected.trackName}" by ${selected.artist}`;
       setMessages([...messages, message]);
       setSelectedTrack(-1);
@@ -129,9 +166,7 @@ export default function SpotifyStyleTelegramMusicBetting() {
           </h2>
         )}
         <audio ref={audioRef}>
-          <source
-            type="audio/mpeg"
-          />
+          <source type="audio/mpeg" />
           Your browser does not support the audio element.
         </audio>
       </div>
@@ -157,11 +192,18 @@ export default function SpotifyStyleTelegramMusicBetting() {
               className="flex-1 p-3 bg-[#3E3E3E] text-white border-none rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1DB954]"
             />
             <button
-              onClick={handleBet}
+              onClick={handleBuy}
               disabled={!betAmount}
               className="bg-[#1DB954] text-black p-3 rounded-full disabled:opacity-50 hover:bg-[#1ED760] transition-all"
             >
               <Send className="w-6 h-6" />
+            </button>
+            <button
+              onClick={handleSell}
+              disabled={!betAmount}
+              className="bg-[#1DB954] text-black p-3 rounded-full disabled:opacity-50 hover:bg-[#1ED760] transition-all"
+            >
+              <TrendingUp className="w-6 h-6" />
             </button>
           </div>
         )}
