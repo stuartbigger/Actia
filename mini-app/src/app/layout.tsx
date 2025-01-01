@@ -12,8 +12,8 @@ import "./_assets/globals.css";
 import { WalletProvider } from "@/components/WalletContext/WalletContext";
 
 export const metadata: Metadata = {
-  title: "Your Application Title Goes Here",
-  description: "Your application description goes here",
+  title: "Actia",
+  description: "Crypto music battles",
 };
 
 export default async function RootLayout({ children }: PropsWithChildren) {

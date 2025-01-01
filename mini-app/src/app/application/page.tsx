@@ -196,7 +196,7 @@ export default function SpotifyStyleTelegramMusicBetting() {
                           : "text-gray-400"
                       }`}
                     >
-                      Buy Price: <span className="font-medium">{prices.length > 0 ? prices[idx].buyPrice.toString() : 0} USDB</span>
+                      Buy Price: <span className="font-medium">{prices.length > 0 ? prices[idx].buyPrice.toString() : 0.5} USDB</span>
                     </p>
                     <p
                       className={`text-sm ${
@@ -205,7 +205,7 @@ export default function SpotifyStyleTelegramMusicBetting() {
                           : "text-gray-400"
                       }`}
                     >
-                      Sell Price: <span className="font-medium">{prices.length > 0 ? prices[idx].sellPrice.toString() : 0} USDB</span>
+                      Sell Price: <span className="font-medium">{prices.length > 0 ? prices[idx].sellPrice.toString() : 0.2} USDB</span>
                     </p>
                   </div>
                 </div>
